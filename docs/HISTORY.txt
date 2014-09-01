@@ -4,6 +4,10 @@ Changelog
 1.7 - unreleased
 ----------------
 
+- Import aq_acquire instead of trying to acquire it from the full feed
+  view, since self.aq_acquire is not available in some cases.
+  [jcerjak]
+
 - Use strings instead of integers as CacheTimeoutVocabulary values and cast
   them into integers where needed, so that Generic Setup can import feedmixer
   portlet.xml configurations, where properties are always handled as strings.
@@ -23,7 +27,7 @@ Changelog
 
 * Fix bad cache key on entries(). Previously, the repr of a generator object
   was used. This meant effectively no request caching. Worse, it caused intermittent
-  cache-key overlap with more than one portlet rendered in the same request. 
+  cache-key overlap with more than one portlet rendered in the same request.
   [tmog]
 
 1.5 - 2011-03-02
@@ -76,7 +80,7 @@ Changelog
 * Correct caching of mixed feed entries: caching per instance instead of
   per request meant we would never update our feed as long as the ZODB
   did not expire the assignment. Instead to cache per request and using the
-  list of feed_urls of the assignment. 
+  list of feed_urls of the assignment.
   [wichert]
 
 * Fix typo in the portletBottomLeft CSS class name.
@@ -86,4 +90,3 @@ Changelog
 ----------------
 
 * Initial release.
-

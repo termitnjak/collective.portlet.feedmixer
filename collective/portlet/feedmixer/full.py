@@ -1,4 +1,6 @@
+from Acquisition import aq_acquire
 from Products.Five.browser import BrowserView
+
 
 class FullFeedView(BrowserView):
 
@@ -8,4 +10,4 @@ class FullFeedView(BrowserView):
 
     @property
     def entries(self):
-        return self.aq_acquire('context').entries
+        return aq_acquire(self, 'context').entries
