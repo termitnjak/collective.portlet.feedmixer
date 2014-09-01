@@ -1,5 +1,7 @@
-import unittest
 from collective.portlet.feedmixer.interfaces import isUrlList
+
+import unittest
+
 
 class IsUrlListTests(unittest.TestCase):
     def testEmptyList(self):
@@ -20,15 +22,18 @@ class IsUrlListTests(unittest.TestCase):
 
     def testMultipleValidURLs(self):
         self.assertEqual(
-                isUrlList("http://www.jarn.com/ http://simplon.biz"),
-                True)
+            isUrlList("http://www.jarn.com/ http://simplon.biz"),
+            True
+        )
 
     def testValidAndInvalid(self):
         self.assertEqual(
-                isUrlList("http://www.jarn.com/ simplon.biz"),
-                False)
+            isUrlList("http://www.jarn.com/ simplon.biz"),
+            False
+        )
+
 
 def test_suite():
-    suite=unittest.TestSuite()
+    suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(IsUrlListTests))
     return suite

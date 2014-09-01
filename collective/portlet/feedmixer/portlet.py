@@ -1,20 +1,16 @@
-import itertools
-import time
-import feedparser
-
-from zope.interface import implements
-from zope.component import getMultiAdapter
-from zope.component import getUtility
-
+from collective.portlet.feedmixer.interfaces import IFeedMixer
+from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from plone.app.portlets.portlets import base
 from plone.memoize import request
 from plone.memoize.interfaces import ICacheChooser
-
+from zope.component import getMultiAdapter
+from zope.component import getUtility
 from zope.formlib import form
-from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from zope.interface import implements
 
-from collective.portlet.feedmixer.interfaces import IFeedMixer
-
+import itertools
+import time
+import feedparser
 
 
 class Assignment(base.Assignment):
@@ -34,21 +30,21 @@ class Assignment(base.Assignment):
     def __init__(self, title=title, feeds=feeds, items_shown=items_shown,
                  cache_timeout=cache_timeout,
                  assignment_context_path=assignment_context_path):
-        self.title=title
-        self.feeds=feeds
-        self.items_shown=items_shown
-        self.cache_timeout=cache_timeout
+        self.title = title
+        self.feeds = feeds
+        self.items_shown = items_shown
+        self.cache_timeout = cache_timeout
         self.assignment_context_path = assignment_context_path
 
     @property
     def feed_urls(self):
         return (url.strip() for url in self.feeds.split())
 
-
     def Title(self):
-        """Returns the title. The function is used by Plone to render <title> correctly."""
+        """Returns the title. The function is used by Plone to render
+        <title> correctly.
+        """
         return self.title
-
 
     def cleanFeed(self, feed):
         """Sanitize the feed.
@@ -57,12 +53,10 @@ class Assignment(base.Assignment):
         present and in proper form.
         """
         for entry in feed.entries:
-            entry["feed"]=feed.feed
+            entry["feed"] = feed.feed
             if not "published_parsed" in entry:
-                entry["published_parsed"]=entry["updated_parsed"]
-                entry["published"]=entry["updated"]
-
-
+                entry["published_parsed"] = entry["updated_parsed"]
+                entry["published"] = entry["updated"]
 
     def getFeed(self, url):
         """Fetch a feed.
@@ -70,51 +64,51 @@ class Assignment(base.Assignment):
         This may return a cached result if the cache entry is considered to
         be fresh. Returned feeds have been cleaned using the cleanFeed method.
         """
-        now=time.time()
+        now = time.time()
 
-        chooser=getUtility(ICacheChooser)
-        cache=chooser("collective.portlet.feedmixer.FeedCache")
+        chooser = getUtility(ICacheChooser)
+        cache = chooser("collective.portlet.feedmixer.FeedCache")
 
-        cached_data=cache.get(url, None)
+        cached_data = cache.get(url, None)
         cache_timeout = int(self.cache_timeout)
         if cached_data is not None:
-            (timestamp, feed)=cached_data
-            if now-timestamp<cache_timeout:
+            (timestamp, feed) = cached_data
+            if now - timestamp < cache_timeout:
                 return feed
 
-            newfeed=feedparser.parse(url,
-                    etag=getattr(feed, "etag", None),
-                    modified=getattr(feed, "modified", None))
-            if newfeed.status==304:
+            newfeed = feedparser.parse(
+                url,
+                etag=getattr(feed, "etag", None),
+                modified=getattr(feed, "modified", None)
+            )
+            if newfeed.status == 304:
                 self.cleanFeed(feed)
-                cache[url]=(now+cache_timeout, feed)
+                cache[url] = (now + cache_timeout, feed)
                 return feed
 
-        feed=feedparser.parse(url)
+        feed = feedparser.parse(url)
         self.cleanFeed(feed)
-        cache[url]=(now+cache_timeout, feed)
+        cache[url] = (now + cache_timeout, feed)
 
         return feed
-
 
     def mergeEntriesFromFeeds(self, feeds):
         if not feeds:
             return []
-        if len(feeds)==1:
+        if len(feeds) == 1:
             return feeds[0].entries
 
-        entries=list(itertools.chain(*(feed.entries for feed in feeds)))
+        entries = list(itertools.chain(*(feed.entries for feed in feeds)))
         entries.sort(key=lambda x: x["published_parsed"], reverse=True)
 
         return entries
 
-
-    @request.cache(get_key=lambda func,self:self.feeds,
+    @request.cache(get_key=lambda func, self: self.feeds,
                    get_request="self.request")
     def entries(self):
-        feeds=[self.getFeed(url) for url in self.data.feed_urls]
-        feeds=[feed for feed in feeds if feed is not None]
-        entries=self.mergeEntriesFromFeeds(feeds)
+        feeds = [self.getFeed(url) for url in self.data.feed_urls]
+        feeds = [feed for feed in feeds if feed is not None]
+        entries = self.mergeEntriesFromFeeds(feeds)
         return entries
 
 
@@ -139,22 +133,24 @@ class Renderer(base.Renderer):
     def more_url(self):
         context_path = self.data.assignment_context_path
         if context_path is not None:
-            state=getMultiAdapter((self.context, self.request), name="plone_portal_state")
-            portal=state.portal()
+            state = getMultiAdapter(
+                (self.context, self.request), name="plone_portal_state")
+            portal = state.portal()
             context = portal.unrestrictedTraverse(context_path)
             return "%s/%s/full_feed" % \
-                    (context.absolute_url(),
-                     self.data.__name__)
+                (context.absolute_url(),
+                 self.data.__name__)
         else:
             # Feedmixer portlets which were created before the context was
             # added need to be handled as well. They will still generate
             # wrong urls in subfolders.
-            state=getMultiAdapter((self.context, self.request), name="plone_context_state")
+            state = getMultiAdapter(
+                (self.context, self.request), name="plone_context_state")
             context = state.folder()
             return "%s/++contextportlets++%s/%s/full_feed" % \
-                    (context.absolute_url(),
-                     self.manager.__name__,
-                     self.data.__name__)
+                (context.absolute_url(),
+                 self.manager.__name__,
+                 self.data.__name__)
 
 
 class AddForm(base.AddForm):

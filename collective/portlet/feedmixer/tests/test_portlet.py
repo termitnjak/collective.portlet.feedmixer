@@ -1,16 +1,14 @@
-from zope.component import getUtility, getMultiAdapter
-
-from plone.portlets.interfaces import IPortletType
-from plone.portlets.interfaces import IPortletManager
+from collective.portlet.feedmixer import portlet as portlet_mod
+from collective.portlet.feedmixer.tests import FEED_ONE
+from collective.portlet.feedmixer.tests.base import TestCase
+from plone.app.portlets.storage import PortletAssignmentMapping
 from plone.portlets.interfaces import IPortletAssignment
 from plone.portlets.interfaces import IPortletDataProvider
+from plone.portlets.interfaces import IPortletManager
 from plone.portlets.interfaces import IPortletRenderer
-from plone.app.portlets.storage import PortletAssignmentMapping
+from plone.portlets.interfaces import IPortletType
+from zope.component import getUtility, getMultiAdapter
 
-from collective.portlet.feedmixer import portlet as portlet_mod
-from collective.portlet.feedmixer.tests.base import TestCase
-
-from collective.portlet.feedmixer.tests import FEED_ONE
 
 class TestPortlet(TestCase):
 
@@ -18,10 +16,10 @@ class TestPortlet(TestCase):
         self.setRoles(('Manager',))
 
     def testPortletTypeRegistered(self):
-        portlet = getUtility(IPortletType,
-                name='collective.portlet.feedmixer.FeedMixer')
-        self.assertEquals(portlet.addview,
-                'collective.portlet.feedmixer.FeedMixer')
+        portlet = getUtility(
+            IPortletType, name='collective.portlet.feedmixer.FeedMixer')
+        self.assertEquals(
+            portlet.addview, 'collective.portlet.feedmixer.FeedMixer')
 
     def testInterfaces(self):
         portlet = portlet_mod.Assignment()
@@ -29,9 +27,10 @@ class TestPortlet(TestCase):
         self.failUnless(IPortletDataProvider.providedBy(portlet.data))
 
     def testInvokeAddView(self):
-        portlet = getUtility(IPortletType,
-                name='collective.portlet.feedmixer.FeedMixer')
-        mapping = self.portal.restrictedTraverse('++contextportlets++plone.leftcolumn')
+        portlet = getUtility(
+            IPortletType, name='collective.portlet.feedmixer.FeedMixer')
+        mapping = self.portal.restrictedTraverse(
+            '++contextportlets++plone.leftcolumn')
         for m in mapping.keys():
             del mapping[m]
         addview = mapping.restrictedTraverse('+/' + portlet.addview)
@@ -43,13 +42,12 @@ class TestPortlet(TestCase):
             cache_timeout="32"))
 
         self.assertEquals(len(mapping), 1)
-        assignment=mapping.values()[0]
+        assignment = mapping.values()[0]
         self.failUnless(isinstance(assignment, portlet_mod.Assignment))
         self.assertEqual(assignment.title, "Test Title")
         self.assertEqual(assignment.feeds, "Test Feeds")
         self.assertEqual(assignment.items_shown, 16)
         self.assertEqual(assignment.cache_timeout, "32")
-
 
     def testInvokeEditView(self):
         mapping = PortletAssignmentMapping()
@@ -65,7 +63,7 @@ class TestPortlet(TestCase):
             feeds="Test Feeds",
             items_shown=16,
             cache_timeout="32"))
-        assignment=mapping.values()[0]
+        assignment = mapping.values()[0]
         self.failUnless(isinstance(assignment, portlet_mod.Assignment))
         self.assertEqual(assignment.title, "Test Title")
         self.assertEqual(assignment.feeds, "Test Feeds")
@@ -76,14 +74,15 @@ class TestPortlet(TestCase):
         context = self.folder
         request = self.folder.REQUEST
         view = self.folder.restrictedTraverse('@@plone')
-        manager = getUtility(IPortletManager, name='plone.rightcolumn',
-                context=self.portal)
+        manager = getUtility(
+            IPortletManager, name='plone.rightcolumn', context=self.portal)
 
         assignment = portlet_mod.Assignment()
 
         renderer = getMultiAdapter(
-                (context, request, view, manager, assignment),
-                IPortletRenderer)
+            (context, request, view, manager, assignment),
+            IPortletRenderer
+        )
         self.failUnless(isinstance(renderer, portlet_mod.Renderer))
 
 
@@ -93,24 +92,28 @@ class TestRenderer(TestCase):
         self.setRoles(('Manager',))
 
     def renderer(self, context=None, request=None, view=None,
-            manager=None, assignment=None):
+                 manager=None, assignment=None):
         context = context or self.folder
         request = request or self.folder.REQUEST
         view = view or self.folder.restrictedTraverse('@@plone')
-        manager = manager or getUtility(IPortletManager,
-                name='plone.rightcolumn', context=self.portal)
+        manager = manager or getUtility(
+            IPortletManager, name='plone.rightcolumn', context=self.portal)
 
         assignment = assignment or portlet_mod.Assignment()
         return getMultiAdapter(
-                (context, request, view, manager, assignment),
-                IPortletRenderer)
+            (context, request, view, manager, assignment),
+            IPortletRenderer
+        )
 
     def testRender(self):
-        r = self.renderer(context=self.portal,
-                assignment=portlet_mod.Assignment(
-                    title="Test Title",
-                    items_shown=2,
-                    feeds=FEED_ONE))
+        r = self.renderer(
+            context=self.portal,
+            assignment=portlet_mod.Assignment(
+                title="Test Title",
+                items_shown=2,
+                feeds=FEED_ONE
+            )
+        )
         r = r.__of__(self.folder)
         r.update()
         output = r.render()
