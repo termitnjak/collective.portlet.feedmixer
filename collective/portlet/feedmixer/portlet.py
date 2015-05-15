@@ -9,8 +9,11 @@ from zope.formlib import form
 from zope.interface import implements
 
 import itertools
+import logging
 import time
 import feedparser
+
+logger = logging.getLogger(__name__)
 
 
 class Assignment(base.Assignment):
@@ -106,9 +109,13 @@ class Assignment(base.Assignment):
     @request.cache(get_key=lambda func, self: self.feeds,
                    get_request="self.request")
     def entries(self):
-        feeds = [self.getFeed(url) for url in self.data.feed_urls]
-        feeds = [feed for feed in feeds if feed is not None]
-        entries = self.mergeEntriesFromFeeds(feeds)
+        try:
+            feeds = [self.getFeed(url) for url in self.data.feed_urls]
+            feeds = [feed for feed in feeds if feed is not None]
+            entries = self.mergeEntriesFromFeeds(feeds)
+        except:
+            logger.error('Error getting feed entries:')
+            entries = []
         return entries
 
 
