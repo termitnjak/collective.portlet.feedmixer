@@ -114,7 +114,7 @@ class Assignment(base.Assignment):
             feeds = [feed for feed in feeds if feed is not None]
             entries = self.mergeEntriesFromFeeds(feeds)
         except:
-            logger.error('Error getting feed entries:')
+            logger.exception('Error getting feed entries:')
             entries = []
         return entries
 
